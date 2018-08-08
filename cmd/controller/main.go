@@ -56,6 +56,7 @@ import (
 	"github.com/oklog/run"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"github.com/kubermatic/machine-controller/pkg/admission"
 )
 
 var (
@@ -351,6 +352,8 @@ func createUtilHTTPServer(kubeClient *kubernetes.Clientset, kubeconfigProvider m
 	m.Handle("/metrics", promhttp.HandlerFor(prometheusGatherer, promhttp.HandlerOpts{}))
 	m.Handle("/live", http.HandlerFunc(health.LiveEndpoint))
 	m.Handle("/ready", http.HandlerFunc(health.ReadyEndpoint))
+	mar := admission.MachineAdmissionRequest{KubeClient:kubeClient}
+	m.Handle("/validation", http.HandlerFunc(mar.HandleAdmission))
 
 	return &http.Server{
 		Addr:         listenAddress,
